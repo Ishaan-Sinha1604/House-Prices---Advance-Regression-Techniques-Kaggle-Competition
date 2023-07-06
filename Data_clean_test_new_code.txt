@@ -1,0 +1,147 @@
+test_df <- read_csv(file.choose())
+summary (test_df)
+
+sapply(test_df, function(x) sum(is.na(x)))
+
+copy_test <- dplyr::select(test_df, -c("Alley", "PoolQC", "Fence", "MiscFeature", "FireplaceQu"))
+sapply(copy_test, function(x) sum(is.na(x)))                        
+
+
+copy_test$BsmtQual <- ifelse(is.na(copy_test$BsmtQual), "None", copy_test$BsmtQual)
+copy_test$BsmtCond <- ifelse(is.na(copy_test$BsmtCond), "None", copy_test$BsmtCond)
+copy_test$BsmtExposure <- ifelse(is.na(copy_test$BsmtExposure), "None", copy_test$BsmtExposure)
+copy_test$BsmtFinType1 <- ifelse(is.na(copy_test$BsmtFinType1), "None", copy_test$BsmtFinType1)
+copy_test$BsmtFinType2 <- ifelse(is.na(copy_test$BsmtFinType2), "None", copy_test$BsmtFinType2)
+copy_test$GarageType <- ifelse(is.na(copy_test$GarageType), "None", copy_test$GarageType)
+copy_test$GarageFinish <- ifelse(is.na(copy_test$GarageFinish), "None", copy_test$GarageFinish)
+copy_test$GarageQual <- ifelse(is.na(copy_test$GarageQual), "None", copy_test$GarageQual)
+copy_test$GarageCond <- ifelse(is.na(copy_test$GarageCond), "None", copy_test$GarageCond)
+copy_test$BsmtFullBath <- ifelse(is.na(copy_test$BsmtFullBath), "None", copy_test$BsmtFullBath)
+copy_test$BsmtHalfBath <- ifelse(is.na(copy_test$BsmtHalfBath), "None", copy_test$BsmtHalfBath)
+
+
+str(copy_test)
+copy_test$MSSubClass <- as.character(copy_test$MSSubClass)
+copy_test$OverallQual <- as.character(copy_test$OverallQual)
+copy_test$OverallCond <- as.character(copy_test$OverallCond)
+
+copy_test$Age <- 2022 - copy_test$YearBuilt  
+copy_test$AgeRemodAdd <- 2022 - copy_test$YearRemodAdd
+copy_test$GarageAge <- 2022 - copy_test$GarageYrBlt
+copy_test$AgeSold <- 2022 - copy_test$YrSold
+copy_test <- dplyr::select(copy_test, -c("YearRemodAdd", "GarageYrBlt", "YrSold", "YearBuilt"))
+
+names(copy_test)[names(copy_test) == "1stFlrSF"] <- "FirstFlrSF"
+names(copy_test)[names(copy_test) == "2ndFlrSF"] <- "SecondFlrSF"
+names(copy_test)[names(copy_test) == "3SsnPorch"] <- "ThreeSsnPorch"
+
+sapply(copy_test, function(x) sum(is.na(x)))
+
+# Function for mode
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+copy_test$LotFrontage[is.na(copy_test$LotFrontage)] <- median(copy_test$LotFrontage, na.rm = T)
+copy_test$MasVnrArea[is.na(copy_test$MasVnrArea)] <- median(copy_test$MasVnrArea, na.rm = T)
+copy_test$BsmtFinSF1[is.na(copy_test$BsmtFinSF1)] <- median(copy_test$BsmtFinSF1, na.rm = T)
+copy_test$BsmtFinSF2[is.na(copy_test$BsmtFinSF2)] <- median(copy_test$BsmtFinSF2, na.rm = T)
+copy_test$BsmtUnfSF[is.na(copy_test$BsmtUnfSF)] <- median(copy_test$BsmtUnfSF, na.rm = T)
+copy_test$TotalBsmtSF[is.na(copy_test$TotalBsmtSF)] <- median(copy_test$TotalBsmtSF, na.rm = T)
+copy_test$GarageArea[is.na(copy_test$GarageArea)] <- median(copy_test$GarageArea, na.rm = T)
+copy_test$GarageAge[is.na(copy_test$GarageAge)] <- median(copy_test$GarageAge, na.rm = T)
+copy_test$MSZoning[is.na(copy_test$MSZoning)] <- getmode(copy_test$MSZoning)
+copy_test$Utilities[is.na(copy_test$Utilities)] <- getmode(copy_test$Utilities)
+copy_test$Exterior1st[is.na(copy_test$Exterior1st)] <- getmode(copy_test$Exterior1st)
+copy_test$Exterior2nd[is.na(copy_test$Exterior2nd)] <- getmode(copy_test$Exterior2nd)
+copy_test$MasVnrType[is.na(copy_test$MasVnrType)] <- getmode(copy_test$MasVnrType)
+copy_test$KitchenQual[is.na(copy_test$KitchenQual)] <- getmode(copy_test$KitchenQual)
+copy_test$Functional[is.na(copy_test$Functional)] <- getmode(copy_test$Functional)
+copy_test$SaleType[is.na(copy_test$SaleType)] <- getmode(copy_test$SaleType)
+copy_test$GarageCars[is.na(copy_test$GarageCars)] <- getmode(copy_test$GarageCars)
+
+sapply(copy_test, function(x) sum(is.na(x)))
+copy_test$GarageAge <- ifelse(copy_test$GarageAge<0,0,copy_test$GarageAge)
+md.pattern(copy_test)
+summary(copy_test)
+
+###########
+copy_test$SalePrice <- NA
+
+str(copy_test)
+final_data <- rbind(copy_train, copy_test)
+final_SalePrice <- final_data$SalePrice
+final_data <- dplyr::select(final_data, -c("SalePrice"))
+
+model_1 <- model.matrix( ~ log(LotArea+1)+log(MasVnrArea+1)+log(LotFrontage+1)+log(PoolArea+1)+
+                          log(BsmtFinSF1+1)+log(BsmtFinSF2+1)+log(BsmtUnfSF+1)+log(TotalBsmtSF+1)+log(FirstFlrSF+1)+
+                          log(SecondFlrSF+1)+log(LowQualFinSF+1)+log(GrLivArea+1)+log(GarageArea+1)+log(WoodDeckSF+1)+
+                          log(OpenPorchSF+1)+log(EnclosedPorch+1)+log(ThreeSsnPorch+1)+log(ScreenPorch+1)+log(MiscVal+1)+
+                          log(Age+1)+log(AgeRemodAdd+1)+log(GarageAge+1)+log(AgeSold+1)+LotArea+MasVnrArea+LotFrontage
+                        +BsmtFinSF1+BsmtFinSF2+TotalBsmtSF+FirstFlrSF+SecondFlrSF+LowQualFinSF+GrLivArea+GarageArea+
+                          WoodDeckSF+OpenPorchSF+EnclosedPorch+ThreeSsnPorch+ScreenPorch+MiscVal+Age+AgeRemodAdd+
+                          GarageAge+AgeSold+PoolArea+MSZoning*MSSubClass*LotArea+MSZoning*MSSubClass*log(LotArea+1)+
+                          MSZoning*MSSubClass*sqrt(LotArea)+MSZoning*log(LotArea+1)+
+                          Street+LotFrontage+Street*log(LotFrontage+1)+Street*sqrt(LotFrontage)+
+                          LotShape*LotArea+LotShape*log(LotArea+1)+LotShape*sqrt(LotArea)*MSSubClass+
+                          LotShape*log(LotArea+1)*LandContour+LandSlope+LandSlope*sqrt(LotArea)+
+                          Neighborhood*Utilities+Condition1+Condition2+BldgType+HouseStyle+
+                          OverallQual*OverallCond+OverallQual*OverallCond*GrLivArea+OverallQual*OverallCond*sqrt(GrLivArea)
+                        +OverallCond*log(Age+1)+OverallCond*log(AgeRemodAdd+1)+RoofStyle*RoofMatl+
+                          Exterior1st*Exterior2nd*log(GrLivArea+1)+Exterior1st*Exterior2nd*sqrt(GrLivArea)+
+                          MasVnrType*MasVnrArea+MasVnrType*log(MasVnrArea+1)+MasVnrType*sqrt(MasVnrArea)+
+                          Exterior1st*ExterQual*ExterCond+Exterior2nd*ExterQual*ExterCond+Foundation*log(LotArea+1)+
+                          Foundation*sqrt(LotArea)+BsmtQual*BsmtCond*TotalBsmtSF+BsmtQual*BsmtCond*sqrt(TotalBsmtSF)+
+                          BsmtQual*BsmtCond*log(TotalBsmtSF+1)+BsmtExposure+BsmtFinType1*log(BsmtFinSF1+1)+
+                          BsmtFinType2*log(BsmtFinSF2+1)+Heating*HeatingQC*CentralAir+Electrical+
+                          BsmtFullBath*sqrt(TotalBsmtSF)+BsmtHalfBath*sqrt(TotalBsmtSF)+FullBath*log(GrLivArea+1)+
+                          HalfBath*log(GrLivArea+1)+BedroomAbvGr*log(FirstFlrSF+1)+BedroomAbvGr*log(SecondFlrSF+1)+
+                          KitchenAbvGr*KitchenQual+TotRmsAbvGrd*sqrt(GrLivArea)+Functional+Fireplaces+
+                          GarageType+GarageAge*GarageCond+GarageQual*GarageCond*GarageCars+GarageQual*GarageCond*sqrt(GarageArea)
+                        +GarageQual*GarageCond*log(GarageArea+1)+GarageFinish*log(GarageArea+1)+PavedDrive,final_data)
+model_1 <- cbind(final_data$Id, model_1)
+
+final_data_train <- final_data[1:1460,]
+final_data_test <- final_data[1461:2919,]
+final_SalePrice_train <- final_SalePrice[1:1460]
+final_SalePrice_test <- final_SalePrice[1461:2919]
+
+train_model<- model_1[1:1460,]
+test_model <- model_1[1461:2919,]
+y.train <- log(final_SalePrice_train)
+
+## Lasso output
+lasso.fit <- glmnet(x = train_model, y = y.train, alpha = 1)
+plot(lasso.fit, xvar = "lambda")
+
+crossval <-  cv.glmnet(x = train_model, y = y.train, alpha = 1)
+plot(crossval)
+penalty.lasso <- crossval$lambda.min 
+log(penalty.lasso) #see where it was on the graph
+plot(crossval,xlim=c(-8.5,-6),ylim=c(0.006,0.008))
+lasso.opt.fit <-glmnet(x = train_model, y = y.train, alpha = 1, lambda = penalty.lasso)
+coef(lasso.opt.fit)
+
+lasso.testing <- exp(predict(lasso.opt.fit, s = penalty.lasso, newx =test_model))
+write.csv(lasso.testing, file = "Predicted House Prices lasso.csv")
+
+
+## Ridge output
+ridge.fit<-glmnet(x = train_model, y = y.train, alpha = 0)
+plot(ridge.fit, xvar = "lambda")
+crossval.ridge <-  cv.glmnet(x = train_model, y = y.train, alpha = 0)
+plot(crossval.ridge)
+penalty.ridge <- crossval.ridge$lambda.min 
+log(penalty.ridge) 
+ridge.opt.fit <-glmnet(x = train_model, y = y.train, alpha = 0, lambda = penalty.ridge) #estimate the model with that
+coef(ridge.opt.fit)
+
+ridge.testing <- exp(predict(ridge.opt.fit, s = penalty.ridge, newx =test_model))
+write.csv(ridge.testing, file = "Predicted House Prices Ridge.csv")
+
+
+
+
+
+
